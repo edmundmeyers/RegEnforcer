@@ -1,14 +1,14 @@
 ﻿<Window x:Class="RegEnforcer.RegFilesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:RegEnforcer"
-        Title="RegEnforcer" Height="450" Width="800">
+        Title="RegEnforcer" Height="450" Width="800"
+        Background="{DynamicResource WindowBackgroundColor}">
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="Select Folder" Click="SelectFolderMenuItem_Click"/>
-                <Separator/>
-                <MenuItem Header="Exit" Click="ExitMenuItem_Click"/>
+        <Menu DockPanel.Dock="Top" Background="{DynamicResource HeaderBackgroundColor}">
+            <MenuItem Header="_File" Foreground="{DynamicResource TextColor}">
+                <MenuItem Header="Select Folder" Click="SelectFolderMenuItem_Click" Foreground="{DynamicResource TextColor}" Background="{DynamicResource HeaderBackgroundColor}"  />
+                <Separator Background="{DynamicResource HeaderBackgroundColor}"  />
+                <MenuItem Header="Exit" Click="ExitMenuItem_Click" Foreground="{DynamicResource TextColor}" Background="{DynamicResource HeaderBackgroundColor}" />
             </MenuItem>
         </Menu>
         <ScrollViewer VerticalScrollBarVisibility="Auto" FontFamily="Cascadia Mono" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">

@@ -7,17 +7,11 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="FolderPickerWindow.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Update="RegFilesWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="FolderPickerWindow.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="RegViewer.xaml">
       <SubType>Designer</SubType>
     </Page>

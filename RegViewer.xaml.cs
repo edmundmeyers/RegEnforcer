@@ -8,6 +8,7 @@ using Drawing = System.Drawing;
 using MessageBox = System.Windows.Forms.MessageBox;
 using Orientation = System.Windows.Controls.Orientation;
 using Image = System.Windows.Controls.Image;
+using System.Windows.Media;
 
 namespace RegEnforcer;
 
@@ -18,7 +19,78 @@ public partial class RegViewer : Window
         InitializeComponent();
         LoadRegistryKeys();
         LoadRegFilesFolder();
+
+        // Subscribe to SystemEvents.UserPreferenceChanged
+        SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
     }
+
+    private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category == UserPreferenceCategory.General)
+        {
+            // Check if the system's light/dark mode has changed
+            bool isDarkMode = IsSystemInDarkMode();
+            ToggleDarkMode(isDarkMode);
+        }
+    }
+
+    private void ToggleDarkMode(bool isDarkMode)
+    {
+        var appResources = System.Windows.Application.Current.Resources;
+
+        appResources.MergedDictionaries.Clear();
+
+        if (isDarkMode)
+        {
+            // Load Dark Mode resources
+            var darkModeResource = new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/DarkMode.xaml")
+            };
+            appResources.MergedDictionaries.Add(darkModeResource);
+        }
+        else
+        {
+            // Load Light Mode resources
+            var lightModeResource = new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/LightMode.xaml")
+            };
+            appResources.MergedDictionaries.Add(lightModeResource);
+        }
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        // Unsubscribe from SystemEvents.UserPreferenceChanged
+        SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
+    }
+
+
+    private bool IsSystemInDarkMode()
+    {
+        try
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
+            {
+                if (key != null)
+                {
+                    var value = key.GetValue("AppsUseLightTheme");
+                    if (value is int intValue)
+                    {
+                        return intValue == 0; // 0 = Dark Mode, 1 = Light Mode
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Default to light mode if the registry key is not accessible
+        }
+
+        return false;
+    }
+
 
     private void LoadRegistryKeys()
     {
@@ -91,6 +163,8 @@ public partial class RegViewer : Window
             Margin = new Thickness(0, 0, 5, 0)
         };
         var textBlock = new TextBlock { Text = header };
+        textBlock.Foreground = (SolidColorBrush)System.Windows.Application.Current.FindResource("TextColor");
+        textBlock.Background = (SolidColorBrush)System.Windows.Application.Current.FindResource("HeaderBackgroundColor");
         stackPanel.Children.Add(image);
         stackPanel.Children.Add(textBlock);
 

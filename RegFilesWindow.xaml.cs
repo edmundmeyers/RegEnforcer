@@ -36,8 +36,26 @@ public partial class RegFilesWindow : Window
         // Load font size
         ScreenFontSize = Properties.Settings.Default.ScreenFontSize;
 
+        // Load dark mode preference
+        bool isDarkMode = IsSystemInDarkMode();
+        ToggleDarkMode(isDarkMode);
+
+        // Subscribe to SystemEvents.UserPreferenceChanged
+        SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
+
         LoadRegFiles();
     }
+
+    private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category == UserPreferenceCategory.General)
+        {
+            // Check if the system's light/dark mode has changed
+            bool isDarkMode = IsSystemInDarkMode();
+            ToggleDarkMode(isDarkMode);
+        }
+    }
+
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
         base.OnClosing(e);
@@ -53,8 +71,34 @@ public partial class RegFilesWindow : Window
 
         // Persist settings
         Properties.Settings.Default.Save();
+
+        // Unsubscribe from SystemEvents.UserPreferenceChanged
+        SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
     }
 
+    private bool IsSystemInDarkMode()
+    {
+        try
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
+            {
+                if (key != null)
+                {
+                    var value = key.GetValue("AppsUseLightTheme");
+                    if (value is int intValue)
+                    {
+                        return intValue == 0; // 0 = Dark Mode, 1 = Light Mode
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Default to light mode if the registry key is not accessible
+        }
+
+        return false;
+    }
 
     private void LoadRegFiles()
     {
@@ -120,6 +164,7 @@ public partial class RegFilesWindow : Window
                 var textBlock = new TextBlock
                 {
                     Text = line,
+                    Foreground = (SolidColorBrush)System.Windows.Application.Current.FindResource("TextColor"),
                     FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono"),
                     FontSize = ScreenFontSize,
                     FontWeight = line.EndsWith("]") ? FontWeights.Bold : FontWeights.Normal,
@@ -152,7 +197,7 @@ public partial class RegFilesWindow : Window
                                 Text = $" (Current: \"{regValue}\")",
                                 FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono"),
                                 FontSize = ScreenFontSize,
-                                Foreground = new SolidColorBrush(Colors.Black)
+                                Foreground = (SolidColorBrush)System.Windows.Application.Current.FindResource("TextColor")
                             };
 
                             // Add a "fix" TextBlock to update the registry value
@@ -473,14 +518,34 @@ public partial class RegFilesWindow : Window
             {
                 UpdateFontSize(childStackPanel);
             }
-            else
-            {
-                int i = 0;
-            }
-
-
         }
     }
+    private void ToggleDarkMode(bool isDarkMode)
+    {
+        var appResources = System.Windows.Application.Current.Resources;
+
+        appResources.MergedDictionaries.Clear();
+
+        if (isDarkMode)
+        {
+            // Load Dark Mode resources
+            var darkModeResource = new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/DarkMode.xaml")
+            };
+            appResources.MergedDictionaries.Add(darkModeResource);
+        }
+        else
+        {
+            // Load Light Mode resources
+            var lightModeResource = new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/LightMode.xaml")
+            };
+            appResources.MergedDictionaries.Add(lightModeResource);
+        }
+    }
+
 
 }
 
