@@ -14,11 +14,47 @@ public partial class RegFilesWindow : Window
 {
     private static RegViewer mainWindow;
 
+    private double ScreenFontSize = 11.0;
+
     public RegFilesWindow()
     {
         InitializeComponent();
+
+        // Load window position and size
+        this.Top = Properties.Settings.Default.RegFilesWindowTop;
+        this.Left = Properties.Settings.Default.RegFilesWindowLeft;
+        this.Width = Properties.Settings.Default.RegFilesWindowWidth;
+        this.Height = Properties.Settings.Default.RegFilesWindowHeight;
+
+        // Ensure the window is within screen bounds
+        var screen = System.Windows.SystemParameters.WorkArea;
+        if (this.Top < screen.Top || this.Top + this.Height > screen.Bottom)
+            this.Top = screen.Top;
+        if (this.Left < screen.Left || this.Left + this.Width > screen.Right)
+            this.Left = screen.Left;
+
+        // Load font size
+        ScreenFontSize = Properties.Settings.Default.ScreenFontSize;
+
         LoadRegFiles();
     }
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        base.OnClosing(e);
+
+        // Save window position and size
+        Properties.Settings.Default.RegFilesWindowTop = this.Top;
+        Properties.Settings.Default.RegFilesWindowLeft = this.Left;
+        Properties.Settings.Default.RegFilesWindowWidth = this.Width;
+        Properties.Settings.Default.RegFilesWindowHeight = this.Height;
+
+        // Save font size
+        Properties.Settings.Default.ScreenFontSize = ScreenFontSize;
+
+        // Persist settings
+        Properties.Settings.Default.Save();
+    }
+
 
     private void LoadRegFiles()
     {
@@ -26,11 +62,17 @@ public partial class RegFilesWindow : Window
         var regFilesFolder = Properties.Settings.Default.RegFilePath;
         if (Directory.Exists(regFilesFolder))
         {
+            Title = $"RegEnforcer - {regFilesFolder}";
+
             var regFiles = Directory.GetFiles(regFilesFolder, "*.reg");
             foreach (var regFile in regFiles)
             {
                 AddRegFileContent(regFile);
             }
+        }
+        else
+        {
+            Title = "RegEnforcer";
         }
     }
 
@@ -43,8 +85,8 @@ public partial class RegFilesWindow : Window
             Background = new SolidColorBrush(Colors.Silver),
             Margin = new Thickness(0, 10, 0, 5),
             Padding = new Thickness(5),
-            FontFamily = new System.Windows.Media.FontFamily("Consolas"),
-            FontSize = 11
+            FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono"),
+            FontSize = ScreenFontSize
         };
         RegFilesStackPanel.Children.Add(header);
 
@@ -78,8 +120,8 @@ public partial class RegFilesWindow : Window
                 var textBlock = new TextBlock
                 {
                     Text = line,
-                    FontFamily = new System.Windows.Media.FontFamily("Consolas"),
-                    FontSize = 11,
+                    FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono"),
+                    FontSize = ScreenFontSize,
                     FontWeight = line.EndsWith("]") ? FontWeights.Bold : FontWeights.Normal,
                     Cursor = System.Windows.Input.Cursors.Hand
                 };
@@ -108,8 +150,8 @@ public partial class RegFilesWindow : Window
                             var registryValueTextBlock = new TextBlock
                             {
                                 Text = $" (Current: \"{regValue}\")",
-                                FontFamily = new System.Windows.Media.FontFamily("Consolas"),
-                                FontSize = 11,
+                                FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono"),
+                                FontSize = ScreenFontSize,
                                 Foreground = new SolidColorBrush(Colors.Black)
                             };
 
@@ -117,8 +159,8 @@ public partial class RegFilesWindow : Window
                             var fixTextBlock = new TextBlock
                             {
                                 Text = "fix",
-                                FontFamily = new System.Windows.Media.FontFamily("Consolas"),
-                                FontSize = 11,
+                                FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono"),
+                                FontSize = ScreenFontSize,
                                 Margin = new Thickness(6, 0, 0, 0),
                                 Foreground = new SolidColorBrush(Colors.Blue),
                                 TextDecorations = TextDecorations.Underline,
@@ -390,15 +432,9 @@ public partial class RegFilesWindow : Window
 
     private void SelectFolderMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        var folderPickerWindow = new FolderPickerWindow
+        var selectedPath = FolderPicker.ShowDialog("Select Folder of .Reg Files");
+        if (!string.IsNullOrEmpty(selectedPath))
         {
-            Title = "Select Folder",
-            Width = 400,
-            Height = 600
-        };
-        if (folderPickerWindow.ShowDialog() == true)
-        {
-            var selectedPath = folderPickerWindow.SelectedPath;
             Properties.Settings.Default.RegFilePath = selectedPath;
             Properties.Settings.Default.Save();
             LoadRegFiles();
@@ -408,6 +444,42 @@ public partial class RegFilesWindow : Window
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
     {
         this.Close();
+    }
+
+    private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is ScrollViewer scrollViewer && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            // Adjust the vertical offset based on the mouse wheel delta
+            ScreenFontSize += e.Delta * 0.01;
+            if (ScreenFontSize < 1) ScreenFontSize = 1;
+            UpdateFontSize(RegFilesStackPanel);
+
+            // Mark the event as handled to prevent further propagation
+            e.Handled = true;
+        }
+    }
+
+    private void UpdateFontSize(StackPanel stackPanel)
+    {
+        foreach (UIElement ui in stackPanel.Children)
+        {
+
+            if (ui is TextBlock textBlock)
+            {
+                textBlock.FontSize = ScreenFontSize;
+            } 
+            else if (ui is StackPanel childStackPanel)
+            {
+                UpdateFontSize(childStackPanel);
+            }
+            else
+            {
+                int i = 0;
+            }
+
+
+        }
     }
 
 }

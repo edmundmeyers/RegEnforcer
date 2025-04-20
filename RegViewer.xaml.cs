@@ -140,17 +140,12 @@ public partial class RegViewer : Window
 
     private void SelectFolderMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        var folderPickerWindow = new FolderPickerWindow
+        var selectedPath = FolderPicker.ShowDialog("Select Folder");
+        if (!string.IsNullOrEmpty(selectedPath))
         {
-            Title = "Select Folder",
-            Width = 400,
-            Height = 600
-        };
-        if (folderPickerWindow.ShowDialog() == true)
-        {
-            var selectedPath = folderPickerWindow.SelectedPath;
             Properties.Settings.Default.RegFilePath = selectedPath;
             Properties.Settings.Default.Save();
+            LoadRegFilesFolder();
         }
     }
 

@@ -11,7 +11,7 @@
                 <MenuItem Header="Exit" Click="ExitMenuItem_Click"/>
             </MenuItem>
         </Menu>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" FontFamily="Cascadia Mono" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
             <StackPanel x:Name="RegFilesStackPanel" Margin="10">
                 <!-- Content will be added dynamically -->
             </StackPanel>

@@ -34,5 +34,65 @@ namespace RegEnforcer.Properties {
                 this["RegFilePath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public double RegFilesWindowTop {
+            get {
+                return ((double)(this["RegFilesWindowTop"]));
+            }
+            set {
+                this["RegFilesWindowTop"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public double RegFilesWindowLeft {
+            get {
+                return ((double)(this["RegFilesWindowLeft"]));
+            }
+            set {
+                this["RegFilesWindowLeft"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("800")]
+        public double RegFilesWindowWidth {
+            get {
+                return ((double)(this["RegFilesWindowWidth"]));
+            }
+            set {
+                this["RegFilesWindowWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("600")]
+        public double RegFilesWindowHeight {
+            get {
+                return ((double)(this["RegFilesWindowHeight"]));
+            }
+            set {
+                this["RegFilesWindowHeight"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("11")]
+        public double ScreenFontSize {
+            get {
+                return ((double)(this["ScreenFontSize"]));
+            }
+            set {
+                this["ScreenFontSize"] = value;
+            }
+        }
     }
 }
