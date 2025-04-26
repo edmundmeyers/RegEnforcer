@@ -7,7 +7,7 @@ public class TrayIconManager
     private NotifyIcon notifyIcon;
     private RegEnforcerWindow? regEnforcerWindow; // Make regFilesWindow nullable
 
-    private List<RegistryFixInfo> fixes;
+    private List<RegistryFixInfo> RegistryFixes;
 
     public TrayIconManager()
     {
@@ -19,6 +19,25 @@ public class TrayIconManager
             ShowRegFilesWindow();
         }
     }
+
+    public bool HaveRegistryValuesChanged()
+    {
+        foreach (var fixInfo in RegistryFixes)
+        {
+            // Get the current registry value for the key and value name
+            var currentValue = RegHelper.GetRegistryValue(fixInfo.Key, fixInfo.ValueName);
+
+            // Compare the current value with the FoundValue
+            if (!Equals(currentValue, fixInfo.FoundValue))
+            {
+                return true; // A value has changed
+            }
+        }
+
+        return false; // No values have changed
+    }
+
+
 
     private void SetupTrayIcon()
     {
@@ -75,6 +94,6 @@ public class TrayIconManager
     private bool IsApplicationSetToRunAtStartup()
     {        
         // Use the RegEnforcerWindow's method to check if the application is set to run at startup
-        return new RegEnforcerWindow().IsApplicationSetToRunAtStartup();
+        return AppHelper.IsApplicationSetToRunAtStartup();
     }
 }

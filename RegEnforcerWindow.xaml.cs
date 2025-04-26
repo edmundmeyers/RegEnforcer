@@ -16,15 +16,13 @@ public partial class RegEnforcerWindow : Window
 
     private double ScreenFontSize = 11.0;
 
-    private const string StartupRegistryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
-    private const string AppName = "RegEnforcer";
     public List<RegistryFixInfo> RegistryFixes { get; } = new();
 
     public RegEnforcerWindow()
     {
         InitializeComponent();
 
-        RunAtStartupMenuItem.IsChecked = IsApplicationSetToRunAtStartup();
+        RunAtStartupMenuItem.IsChecked = AppHelper.IsApplicationSetToRunAtStartup();
 
         // Load window position and size
         this.Top = Properties.Settings.Default.RegFilesWindowTop;
@@ -43,8 +41,8 @@ public partial class RegEnforcerWindow : Window
         ScreenFontSize = Properties.Settings.Default.ScreenFontSize;
 
         // Load dark mode preference
-        bool isDarkMode = IsSystemInDarkMode();  
-        ToggleDarkMode(isDarkMode);
+        bool isDarkMode = AppHelper.IsSystemInDarkMode();
+        AppHelper.ToggleDarkMode(isDarkMode);
 
         // Subscribe to SystemEvents.UserPreferenceChanged
         SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
@@ -52,67 +50,13 @@ public partial class RegEnforcerWindow : Window
         LoadRegFiles();
     }
 
-    public bool IsApplicationSetToRunAtStartup()
-    {
-        try
-        {
-            using (var key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, writable: false))
-            {
-                if (key != null)
-                {
-                    var value = key.GetValue(AppName);
-                    return value != null && value.ToString() == System.Reflection.Assembly.GetExecutingAssembly().Location;
-                }
-            }
-        }
-        catch
-        {
-            // Log or handle exceptions as needed
-        }
 
-        return false;
-    }
 
-    private void SetApplicationToRunAtStartup(bool enable)
-    {
-        try
-        {
-            using (var key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, writable: true))
-            {
-                if (key != null)
-                {
-                    if (enable)
-                    {
-                        // Add the application to the startup list
-                        key.SetValue(AppName, System.Reflection.Assembly.GetExecutingAssembly().Location);
-                    }
-                    else
-                    {
-                        // Remove the application from the startup list
-                        key.DeleteValue(AppName, throwOnMissingValue: false);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Windows.MessageBox.Show($"Failed to update startup setting: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
 
 
     private void RunAtStartupMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (RunAtStartupMenuItem.IsChecked)
-        {
-            // Enable "Run at Startup"
-            SetApplicationToRunAtStartup(true);
-        }
-        else
-        {
-            // Disable "Run at Startup"
-            SetApplicationToRunAtStartup(false);
-        }
+        AppHelper.SetApplicationToRunAtStartup(RunAtStartupMenuItem.IsChecked);
     }
 
     private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
@@ -120,8 +64,8 @@ public partial class RegEnforcerWindow : Window
         if (e.Category == UserPreferenceCategory.General)
         {
             // Check if the system's light/dark mode has changed
-            bool isDarkMode = IsSystemInDarkMode();
-            ToggleDarkMode(isDarkMode);
+            bool isDarkMode = AppHelper.IsSystemInDarkMode();
+            AppHelper.ToggleDarkMode(isDarkMode);
         }
     }
 
@@ -145,31 +89,7 @@ public partial class RegEnforcerWindow : Window
         SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
     }
 
-    private bool IsSystemInDarkMode()
-    {
-        try
-        {
-            using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
-            {
-                if (key != null)
-                {
-                    var value = key.GetValue("AppsUseLightTheme");
-                    if (value is int intValue)
-                    {
-                        return intValue == 0; // 0 = Dark Mode, 1 = Light Mode
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // Default to light mode if the registry key is not accessible
-        }
-
-        return false;
-    }
-
-    private void LoadRegFiles()
+     private void LoadRegFiles()
     {
         RegistryFixes.Clear();
 
@@ -437,32 +357,6 @@ public partial class RegEnforcerWindow : Window
             }
         }
     }
-    private void ToggleDarkMode(bool isDarkMode)
-    {
-        var appResources = System.Windows.Application.Current.Resources;
-
-        appResources.MergedDictionaries.Clear();
-
-        if (isDarkMode)
-        {
-            // Load Dark Mode resources
-            var darkModeResource = new ResourceDictionary
-            {
-                Source = new Uri("pack://application:,,,/DarkMode.xaml")
-            };
-            appResources.MergedDictionaries.Add(darkModeResource);
-        }
-        else
-        {
-            // Load Light Mode resources
-            var lightModeResource = new ResourceDictionary
-            {
-                Source = new Uri("pack://application:,,,/LightMode.xaml")
-            };
-            appResources.MergedDictionaries.Add(lightModeResource);
-        }
-    }
-
-
+  
 }
 
