@@ -5,38 +5,91 @@ using System.Windows;
 public class TrayIconManager
 {
     private NotifyIcon notifyIcon;
-    private RegEnforcerWindow? regEnforcerWindow; // Make regFilesWindow nullable
+    private RegEnforcerWindow regEnforcerWindow; // Make regFilesWindow nullable
 
     private List<RegistryFixInfo> RegistryFixes;
+    private System.Timers.Timer registryCheckTimer;
 
     public TrayIconManager()
     {
         SetupTrayIcon();
 
         // Check if the application is not set to run at startup
-        if (!IsApplicationSetToRunAtStartup())
+        ShowRegFilesWindow(!IsApplicationSetToRunAtStartup());
+
+        RegistryFixes = regEnforcerWindow.RegistryFixes;
+
+        // Initialize and start the timer
+        InitializeRegistryCheckTimer();
+    }
+    private void InitializeRegistryCheckTimer()
+    {
+        registryCheckTimer = new System.Timers.Timer(1000); // 30 seconds in milliseconds
+        registryCheckTimer.Elapsed += (sender, e) => CheckRegistryValues();
+        registryCheckTimer.AutoReset = true; // Ensures the timer runs repeatedly
+        registryCheckTimer.Start();
+    }
+
+    private void CheckRegistryValues()
+    {
+        string changedValues = HaveRegistryValuesChanged();
+
+        if (!string.IsNullOrEmpty(changedValues))
         {
-            ShowRegFilesWindow();
+            // Call LoadRegFiles on the UI thread
+            regEnforcerWindow.Dispatcher.Invoke(() =>
+            {
+                regEnforcerWindow.LoadRegFiles();
+            });
+
+            // Display a notification if there are changes
+            notifyIcon.ShowBalloonTip(
+                5000, // Duration in milliseconds
+                "Registry Changes Detected",
+                $"The following registry values have changed:\n{changedValues}",
+                ToolTipIcon.Warning
+            );
         }
     }
 
-    public bool HaveRegistryValuesChanged()
+    public string HaveRegistryValuesChanged()
     {
+        string changedValues = string.Empty;
+
         foreach (var fixInfo in RegistryFixes)
         {
             // Get the current registry value for the key and value name
             var currentValue = RegHelper.GetRegistryValue(fixInfo.Key, fixInfo.ValueName);
 
             // Compare the current value with the FoundValue
-            if (!Equals(currentValue, fixInfo.FoundValue))
+            if (!AreValuesEqual(currentValue, fixInfo.FoundValue))
             {
-                return true; // A value has changed
+                changedValues += $"{fixInfo.Key}\\{fixInfo.ValueName}: {currentValue} (Expected: {fixInfo.FoundValue})\n";
             }
         }
 
-        return false; // No values have changed
+        return changedValues; // No values have changed
     }
 
+
+    private bool AreValuesEqual(object currentValue, object foundValue)
+    {
+        if (currentValue is byte[] currentBytes && foundValue is byte[] foundBytes)
+        {
+            // Compare byte arrays
+            return currentBytes.SequenceEqual(foundBytes);
+        }
+        else if (currentValue is string[] currentStrings && foundValue is string[] foundStrings)
+        {
+            // Compare string arrays
+            return currentStrings.SequenceEqual(foundStrings);
+        }
+        else
+        {
+            // Fallback to default equality check for other types
+            return Equals(currentValue, foundValue);
+        }
+    }
 
 
     private void SetupTrayIcon()
@@ -72,7 +125,7 @@ public class TrayIconManager
         notifyIcon.ContextMenuStrip = contextMenu;
     }
 
-    private void ShowRegFilesWindow()
+    private void ShowRegFilesWindow(bool showWindow = true)
     {
         if (regEnforcerWindow == null)
         {
@@ -80,9 +133,12 @@ public class TrayIconManager
             regEnforcerWindow.Closed += (s, e) => regEnforcerWindow = null;
         }
 
-        regEnforcerWindow.Show();
-        regEnforcerWindow.WindowState = WindowState.Normal;
-        regEnforcerWindow.Activate();
+        if (showWindow)
+        {
+            regEnforcerWindow.Show();
+            regEnforcerWindow.WindowState = WindowState.Normal;
+            regEnforcerWindow.Activate();
+        }
     }
 
     private void ExitApplication()

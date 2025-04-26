@@ -85,11 +85,14 @@ public partial class RegEnforcerWindow : Window
         // Persist settings
         Properties.Settings.Default.Save();
 
+        e.Cancel = true;
+        this.Visibility = Visibility.Hidden;
+
         // Unsubscribe from SystemEvents.UserPreferenceChanged
         SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
     }
 
-     private void LoadRegFiles()
+     public void LoadRegFiles()
     {
         RegistryFixes.Clear();
 
@@ -325,8 +328,10 @@ public partial class RegEnforcerWindow : Window
 
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        this.Close();
+        this.Visibility = Visibility.Hidden;
     }
+
+
 
     private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
