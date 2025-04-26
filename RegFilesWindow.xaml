@@ -8,6 +8,8 @@
             <MenuItem Header="_File" Foreground="{DynamicResource TextColor}">
                 <MenuItem Header="Select Folder" Click="SelectFolderMenuItem_Click" Foreground="{DynamicResource TextColor}" Background="{DynamicResource HeaderBackgroundColor}"  />
                 <Separator Background="{DynamicResource HeaderBackgroundColor}"  />
+                <MenuItem Header="Run at Startup" IsCheckable="True" Click="RunAtStartupMenuItem_Click" x:Name="RunAtStartupMenuItem" Foreground="{DynamicResource TextColor}" Background="{DynamicResource HeaderBackgroundColor}" />
+                <Separator Background="{DynamicResource HeaderBackgroundColor}" />
                 <MenuItem Header="Exit" Click="ExitMenuItem_Click" Foreground="{DynamicResource TextColor}" Background="{DynamicResource HeaderBackgroundColor}" />
             </MenuItem>
         </Menu>

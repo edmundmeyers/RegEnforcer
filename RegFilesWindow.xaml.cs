@@ -16,9 +16,14 @@ public partial class RegFilesWindow : Window
 
     private double ScreenFontSize = 11.0;
 
+    private const string StartupRegistryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+    private const string AppName = "RegEnforcer";
+
     public RegFilesWindow()
     {
         InitializeComponent();
+
+        RunAtStartupMenuItem.IsChecked = IsApplicationSetToRunAtStartup();
 
         // Load window position and size
         this.Top = Properties.Settings.Default.RegFilesWindowTop;
@@ -44,6 +49,69 @@ public partial class RegFilesWindow : Window
         SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
 
         LoadRegFiles();
+    }
+
+    private bool IsApplicationSetToRunAtStartup()
+    {
+        try
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, writable: false))
+            {
+                if (key != null)
+                {
+                    var value = key.GetValue(AppName);
+                    return value != null && value.ToString() == System.Reflection.Assembly.GetExecutingAssembly().Location;
+                }
+            }
+        }
+        catch
+        {
+            // Log or handle exceptions as needed
+        }
+
+        return false;
+    }
+
+    private void SetApplicationToRunAtStartup(bool enable)
+    {
+        try
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(StartupRegistryKey, writable: true))
+            {
+                if (key != null)
+                {
+                    if (enable)
+                    {
+                        // Add the application to the startup list
+                        key.SetValue(AppName, System.Reflection.Assembly.GetExecutingAssembly().Location);
+                    }
+                    else
+                    {
+                        // Remove the application from the startup list
+                        key.DeleteValue(AppName, throwOnMissingValue: false);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Failed to update startup setting: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+
+    private void RunAtStartupMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (RunAtStartupMenuItem.IsChecked)
+        {
+            // Enable "Run at Startup"
+            SetApplicationToRunAtStartup(true);
+        }
+        else
+        {
+            // Disable "Run at Startup"
+            SetApplicationToRunAtStartup(false);
+        }
     }
 
     private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
