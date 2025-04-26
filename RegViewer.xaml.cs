@@ -164,7 +164,6 @@ public partial class RegViewer : Window
         };
         var textBlock = new TextBlock { Text = header };
         textBlock.Foreground = (SolidColorBrush)System.Windows.Application.Current.FindResource("TextColor");
-        textBlock.Background = (SolidColorBrush)System.Windows.Application.Current.FindResource("HeaderBackgroundColor");
         stackPanel.Children.Add(image);
         stackPanel.Children.Add(textBlock);
 

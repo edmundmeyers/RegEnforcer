@@ -42,7 +42,7 @@ public partial class RegEnforcerWindow : Window
         ScreenFontSize = Properties.Settings.Default.ScreenFontSize;
 
         // Load dark mode preference
-        bool isDarkMode = IsSystemInDarkMode();
+        bool isDarkMode = IsSystemInDarkMode();  // false; // IsSystemInDarkMode();
         ToggleDarkMode(isDarkMode);
 
         // Subscribe to SystemEvents.UserPreferenceChanged

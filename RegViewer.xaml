@@ -4,27 +4,27 @@
         Title="Registry Viewer" Height="550" Width="900"
         Background="{DynamicResource WindowBackgroundColor}">
     <DockPanel>
-        <Menu DockPanel.Dock="Top" Background="{DynamicResource HeaderBackgroundColor}">
+        <Menu DockPanel.Dock="Top" Background="{DynamicResource WindowBackgroundColor}">
             <MenuItem Header="_File" Foreground="{DynamicResource TextColor}">
                 <MenuItem Header="E_xit" Click="ExitMenuItem_Click" Foreground="{DynamicResource TextColor}" />
             </MenuItem>
         </Menu>
-        <Grid Background="{DynamicResource HeaderBackgroundColor}">
+        <Grid Background="{DynamicResource WindowBackgroundColor}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="3*" />
             </Grid.ColumnDefinitions>
-            <TreeView Name="RegistryTreeView" Grid.Column="0" SelectedItemChanged="RegistryTreeView_SelectedItemChanged" FontFamily="Cascadia Mono" Foreground="{DynamicResource TextColor}" Background="{DynamicResource HeaderBackgroundColor}">
+            <TreeView Name="RegistryTreeView" Grid.Column="0" SelectedItemChanged="RegistryTreeView_SelectedItemChanged" FontFamily="Cascadia Mono" Foreground="{DynamicResource TextColor}" Background="{DynamicResource WindowBackgroundColor}">
                 <!-- TreeView items will be populated in code-behind -->
             </TreeView>
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-            <DataGrid Name="RegistryDataGrid" Grid.Column="2" AutoGenerateColumns="False" IsReadOnly="True" FontFamily="Cascadia Mono"  Background="{DynamicResource HeaderBackgroundColor}">
+            <DataGrid Name="RegistryDataGrid" Grid.Column="2" AutoGenerateColumns="False" IsReadOnly="True" FontFamily="Cascadia Mono"  Background="{DynamicResource WindowBackgroundColor}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" Foreground="{DynamicResource TextColor}" >
                         <DataGridTextColumn.CellStyle>
                             <Style TargetType="DataGridCell">
-                                <Setter Property="Background" Value="{DynamicResource HeaderBackgroundColor}" />
+                                <Setter Property="Background" Value="{DynamicResource WindowBackgroundColor}" />
                                 <Setter Property="Foreground" Value="{DynamicResource TextColor}" />
                                 <Setter Property="BorderThickness" Value="0" />
                             </Style>
@@ -33,7 +33,7 @@
                     <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="*" Foreground="{DynamicResource TextColor}">
                         <DataGridTextColumn.CellStyle>
                             <Style TargetType="DataGridCell">
-                                <Setter Property="Background" Value="{DynamicResource HeaderBackgroundColor}" />
+                                <Setter Property="Background" Value="{DynamicResource WindowBackgroundColor}" />
                                 <Setter Property="Foreground" Value="{DynamicResource TextColor}" />
                                 <Setter Property="BorderThickness" Value="0" />
                             </Style>
