@@ -11,5 +11,7 @@ public partial class App : System.Windows.Application
 
         //base.OnStartup(e);
         trayIconManager = new TrayIconManager();
+
+
     }
 }

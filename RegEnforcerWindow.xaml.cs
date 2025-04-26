@@ -10,7 +10,7 @@ using System.Windows.Media.Imaging;
 
 namespace RegEnforcer;
 
-public partial class RegFilesWindow : Window
+public partial class RegEnforcerWindow : Window
 {
     private static RegViewer mainWindow;
 
@@ -19,7 +19,7 @@ public partial class RegFilesWindow : Window
     private const string StartupRegistryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
     private const string AppName = "RegEnforcer";
 
-    public RegFilesWindow()
+    public RegEnforcerWindow()
     {
         InitializeComponent();
 
@@ -51,7 +51,7 @@ public partial class RegFilesWindow : Window
         LoadRegFiles();
     }
 
-    private bool IsApplicationSetToRunAtStartup()
+    public bool IsApplicationSetToRunAtStartup()
     {
         try
         {

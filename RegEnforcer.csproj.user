@@ -7,7 +7,7 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="RegFilesWindow.xaml.cs">
+    <Compile Update="RegEnforcerWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -15,7 +15,7 @@
     <Page Update="RegViewer.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="RegFilesWindow.xaml">
+    <Page Update="RegEnforcerWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

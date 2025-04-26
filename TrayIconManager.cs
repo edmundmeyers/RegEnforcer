@@ -1,30 +1,30 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Forms;
-using System.Drawing;
+﻿using RegEnforcer;
 using System.Reflection;
-
-namespace RegEnforcer;
+using System.Windows;
 
 public class TrayIconManager
 {
     private NotifyIcon notifyIcon;
-    private RegFilesWindow? regFilesWindow; // Make regFilesWindow nullable
+    private RegEnforcerWindow? regEnforcerWindow; // Make regFilesWindow nullable
 
     public TrayIconManager()
     {
         SetupTrayIcon();
+
+        // Check if the application is not set to run at startup
+        if (!IsApplicationSetToRunAtStartup())
+        {
+            ShowRegFilesWindow();
+        }
     }
 
     private void SetupTrayIcon()
     {
-        //var resourceName = "RegEnforcer.Resources.regedit.ico";
         var resourceName = "RegEnforcer.Resources.Icon8.ico";
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
 
         if (stream == null)
         {
-            // List all resources to help debug the issue
             var resourceNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
             foreach (var name in resourceNames)
             {
@@ -53,20 +53,26 @@ public class TrayIconManager
 
     private void ShowRegFilesWindow()
     {
-        if (regFilesWindow == null)
+        if (regEnforcerWindow == null)
         {
-            regFilesWindow = new RegFilesWindow();
-            regFilesWindow.Closed += (s, e) => regFilesWindow = null;
+            regEnforcerWindow = new RegEnforcerWindow();
+            regEnforcerWindow.Closed += (s, e) => regEnforcerWindow = null;
         }
 
-        regFilesWindow.Show();
-        regFilesWindow.WindowState = WindowState.Normal;
-        regFilesWindow.Activate();
+        regEnforcerWindow.Show();
+        regEnforcerWindow.WindowState = WindowState.Normal;
+        regEnforcerWindow.Activate();
     }
 
     private void ExitApplication()
     {
         notifyIcon.Dispose();
         System.Windows.Application.Current.Shutdown();
+    }
+
+    private bool IsApplicationSetToRunAtStartup()
+    {
+        // Use the RegEnforcerWindow's method to check if the application is set to run at startup
+        return new RegEnforcerWindow().IsApplicationSetToRunAtStartup();
     }
 }
