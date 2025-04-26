@@ -24,7 +24,7 @@ public class TrayIconManager
     }
     private void InitializeRegistryCheckTimer()
     {
-        registryCheckTimer = new System.Timers.Timer(1000); // 30 seconds in milliseconds
+        registryCheckTimer = new System.Timers.Timer(2000); // 2 seconds in milliseconds
         registryCheckTimer.Elapsed += (sender, e) => CheckRegistryValues();
         registryCheckTimer.AutoReset = true; // Ensures the timer runs repeatedly
         registryCheckTimer.Start();
