@@ -18,6 +18,7 @@ public partial class RegEnforcerWindow : Window
 
     private const string StartupRegistryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
     private const string AppName = "RegEnforcer";
+    public List<RegistryFixInfo> RegistryFixes { get; } = new();
 
     public RegEnforcerWindow()
     {
@@ -42,7 +43,7 @@ public partial class RegEnforcerWindow : Window
         ScreenFontSize = Properties.Settings.Default.ScreenFontSize;
 
         // Load dark mode preference
-        bool isDarkMode = IsSystemInDarkMode();  // false; // IsSystemInDarkMode();
+        bool isDarkMode = IsSystemInDarkMode();  
         ToggleDarkMode(isDarkMode);
 
         // Subscribe to SystemEvents.UserPreferenceChanged
@@ -170,6 +171,8 @@ public partial class RegEnforcerWindow : Window
 
     private void LoadRegFiles()
     {
+        RegistryFixes.Clear();
+
         RegFilesStackPanel.Children.Clear();
         var regFilesFolder = Properties.Settings.Default.RegFilePath;
         if (Directory.Exists(regFilesFolder))
@@ -252,10 +255,12 @@ public partial class RegEnforcerWindow : Window
                     if (parts.Length == 2)
                     {
                         var valueName = parts[0].Trim('"');
-                        var regValue = GetRegistryValue(currentKey, valueName);
+                        var regValue = RegHelper.GetRegistryValue(currentKey, valueName);
                         var regFileValue = parts[1].Trim('"');
+                        var registryFixInfo = new RegistryFixInfo { Key = currentKey, ValueName = valueName, Value = regFileValue, FoundValue = regValue };
+                        RegistryFixes.Add(registryFixInfo);
 
-                        if (regValue != null && !CompareRegistryValues(regValue, regFileValue))
+                        if (regValue != null && !RegHelper.CompareRegistryValues(regValue, regFileValue))
                         {
                             textBlock.Foreground = new SolidColorBrush(Colors.Red);
 
@@ -278,7 +283,7 @@ public partial class RegEnforcerWindow : Window
                                 Foreground = new SolidColorBrush(Colors.Blue),
                                 TextDecorations = TextDecorations.Underline,
                                 Cursor = System.Windows.Input.Cursors.Hand,
-                                Tag = new RegistryFixInfo { Key = currentKey, ValueName = valueName, Value = regFileValue }
+                                Tag = registryFixInfo
                             };
                             fixTextBlock.MouseLeftButtonUp += FixTextBlock_MouseLeftButtonUp;
 
@@ -386,162 +391,6 @@ public partial class RegEnforcerWindow : Window
         mainWindow.DrillToKey(keyPath);
     }
 
-    private object GetRegistryValue(string fullPath, string valueName)
-    {
-        try
-        {
-            // Split the full path into root key and subkey
-            var parts = fullPath.Split(new[] { '\\' }, 2);
-            if (parts.Length != 2)
-            {
-                Console.WriteLine($"Invalid registry path: {fullPath}");
-                return null;
-            }
-
-            var rootKey = parts[0];
-            var subKeyPath = parts[1];
-
-            RegistryKey rootRegistryKey = null;
-
-            // Determine the root key
-            switch (rootKey.ToUpper())
-            {
-                case "HKEY_LOCAL_MACHINE":
-                    rootRegistryKey = Registry.LocalMachine;
-                    break;
-                case "HKEY_CURRENT_USER":
-                    rootRegistryKey = Registry.CurrentUser;
-                    break;
-                case "HKEY_CLASSES_ROOT":
-                    rootRegistryKey = Registry.ClassesRoot;
-                    break;
-                case "HKEY_USERS":
-                    rootRegistryKey = Registry.Users;
-                    break;
-                case "HKEY_CURRENT_CONFIG":
-                    rootRegistryKey = Registry.CurrentConfig;
-                    break;
-                default:
-                    Console.WriteLine($"Unknown root key: {rootKey}");
-                    return null;
-            }
-
-            // Open the subkey and get the value without expanding environment variables
-            using (var subKey = rootRegistryKey.OpenSubKey(subKeyPath))
-            {
-                if (subKey != null)
-                {
-                    return subKey.GetValue(valueName, null, RegistryValueOptions.DoNotExpandEnvironmentNames);
-                }
-            }
-
-            // Log the key path and value name if not found
-            Console.WriteLine($"Registry key or value not found: {fullPath}\\{valueName}");
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            Console.WriteLine($"Error accessing registry: {ex.Message}");
-        }
-
-        return null;
-    }
-
-    private bool CompareRegistryValues(object regValue, string regFileValue)
-    {
-        if (regFileValue.StartsWith("hex:"))
-        {
-            regFileValue = regFileValue.Substring(4);
-            var regFileBytes = ParseRegFileBinaryValue(regFileValue);
-            return regValue is byte[] byteArrayValue && byteArrayValue.SequenceEqual(regFileBytes);
-        }
-        if (regFileValue.StartsWith("dword:"))
-        {
-            regFileValue = regFileValue.Substring(6);
-            return regValue is int intValue && intValue.ToString("x8") == regFileValue;
-        }
-        if (regFileValue.StartsWith("hex(b):"))
-        {
-            regFileValue = regFileValue.Substring(7);
-            var regFileBytes = ParseRegFileBinaryValue(regFileValue);
-            return regValue is long longValue && BitConverter.GetBytes(longValue).SequenceEqual(regFileBytes);
-        }
-        if (regFileValue.StartsWith("hex(7):"))
-        {
-            regFileValue = regFileValue.Substring(7);
-            var regFileStrings = ParseRegFileMultiStringValue(regFileValue);
-            return regValue is string[] multiStringValue && multiStringValue.SequenceEqual(regFileStrings);
-        }
-        if (regFileValue.StartsWith("hex(2):"))
-        {
-            regFileValue = regFileValue.Substring(7);
-            var regFileString = ParseRegFileExpandableStringValue(regFileValue);
-            return regValue is string strValue && strValue == regFileString;
-        }
-
-        return regValue.ToString() == regFileValue;
-    }
-
-    private byte[] ParseRegFileBinaryValue(string regFileValue)
-    {
-        try
-        {
-            var hexValues = regFileValue.Split(',');
-            var bytes = new byte[hexValues.Length];
-            for (int i = 0; i < hexValues.Length; i++)
-            {
-                bytes[i] = Convert.ToByte(hexValues[i].Trim(), 16);
-            }
-            return bytes;
-        }
-        catch (FormatException ex)
-        {
-            Console.WriteLine($"Error parsing binary value: {ex.Message}");
-            return Array.Empty<byte>();
-        }
-        catch (OverflowException ex)
-        {
-            Console.WriteLine($"Error parsing binary value: {ex.Message}");
-            return Array.Empty<byte>();
-        }
-    }
-
-    private string[] ParseRegFileMultiStringValue(string regFileValue)
-    {
-        // Split the comma-delimited string and convert it to a byte array
-        string[] hexValues = regFileValue.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-        byte[] hexData = new byte[hexValues.Length];
-
-        for (int i = 0; i < hexValues.Length; i++)
-        {
-            hexData[i] = Convert.ToByte(hexValues[i].Trim(), 16); // Convert each hex string to a byte
-        }
-
-        // Decode the byte array into a Unicode string
-        string decodedString = Encoding.Unicode.GetString(hexData);
-
-        // Split the string by null characters ('\0') and return the result
-        string[] result = decodedString.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
-
-        return result;
-    }
-
-    private string ParseRegFileExpandableStringValue(string regFileValue)
-    {
-        // Split the comma-delimited string and convert it to a byte array
-        string[] hexValues = regFileValue.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-        byte[] hexData = new byte[hexValues.Length];
-
-        for (int i = 0; i < hexValues.Length; i++)
-        {
-            hexData[i] = Convert.ToByte(hexValues[i].Trim(), 16); // Convert each hex string to a byte
-        }
-
-        // Decode the byte array into a Unicode string
-        string decodedString = Encoding.Unicode.GetString(hexData);
-
-        return decodedString.TrimEnd('\0');
-    }
 
     private void SelectFolderMenuItem_Click(object sender, RoutedEventArgs e)
     {

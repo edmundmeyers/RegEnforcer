@@ -7,6 +7,8 @@ public class TrayIconManager
     private NotifyIcon notifyIcon;
     private RegEnforcerWindow? regEnforcerWindow; // Make regFilesWindow nullable
 
+    private List<RegistryFixInfo> fixes;
+
     public TrayIconManager()
     {
         SetupTrayIcon();
@@ -71,7 +73,7 @@ public class TrayIconManager
     }
 
     private bool IsApplicationSetToRunAtStartup()
-    {
+    {        
         // Use the RegEnforcerWindow's method to check if the application is set to run at startup
         return new RegEnforcerWindow().IsApplicationSetToRunAtStartup();
     }
