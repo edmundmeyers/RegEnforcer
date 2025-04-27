@@ -44,6 +44,55 @@ public static class RegHelper
         return regValue.ToString() == regFileValue;
     }
 
+    public static string RegistryValueToString(object regValue)
+    {
+        if (regValue == null)
+        {
+            return string.Empty; // Return an empty string for null values
+        }
+
+        switch (regValue)
+        {
+            case int intValue:
+                // Convert REG_DWORD to "dword:xxxxxxxx" format
+                return $"dword:{intValue:x8}";
+
+            case long longValue:
+                // Convert REG_QWORD to "hex(b):" format
+                return $"hex(b):{BitConverter.ToString(BitConverter.GetBytes(longValue)).Replace("-", ",").ToLower()}";
+
+            case byte[] byteArrayValue:
+                // Convert REG_BINARY to "hex:" format
+                return $"hex:{BitConverter.ToString(byteArrayValue).Replace("-", ",").ToLower()}";
+
+            case string[] stringArrayValue:
+                // Convert REG_MULTI_SZ to "hex(7):" format
+                var multiStringBytes = Encoding.Unicode.GetBytes(string.Join("\0", stringArrayValue) + "\0\0");
+                return $"hex(7):{BitConverter.ToString(multiStringBytes).Replace("-", ",").ToLower()}";
+
+            case string stringValue when IsExpandableString(stringValue):
+                // Convert REG_EXPAND_SZ to "hex(2):" format
+                var expandStringBytes = Encoding.Unicode.GetBytes(stringValue + "\0");
+                return $"hex(2):{BitConverter.ToString(expandStringBytes).Replace("-", ",").ToLower()}";
+
+            case string stringValue:
+                // Convert REG_SZ to plain string
+                return stringValue;
+
+            default:
+                // Fallback for unsupported types
+                return regValue.ToString();
+        }
+    }
+
+    private static bool IsExpandableString(string value)
+    {
+        // Add logic here if you need to differentiate between REG_SZ and REG_EXPAND_SZ
+        // For now, assume all strings can be REG_EXPAND_SZ if needed
+        return value.Contains("%"); // Example: Check for environment variables like %SystemRoot%
+    }
+
+
     public static byte[] ParseRegFileBinaryValue(string regFileValue)
     {
         try
@@ -151,6 +200,8 @@ public static class RegHelper
             {
                 if (subKey != null)
                 {
+                    if (valueName == "@") valueName = null;
+
                     return subKey.GetValue(valueName, null, RegistryValueOptions.DoNotExpandEnvironmentNames);
                 }
             }

@@ -178,12 +178,13 @@ public partial class RegEnforcerWindow : Window
                     if (parts.Length == 2)
                     {
                         var valueName = parts[0].Trim('"');
-                        var regValue = RegHelper.GetRegistryValue(currentKey, valueName);
+                        var regValue = RegHelper.RegistryValueToString(RegHelper.GetRegistryValue(currentKey, valueName));
                         var regFileValue = parts[1].Trim('"');
                         var registryFixInfo = new RegistryFixInfo { Key = currentKey, ValueName = valueName, Value = regFileValue, FoundValue = regValue };
                         RegistryFixes.Add(registryFixInfo);
 
-                        if (regValue != null && !RegHelper.CompareRegistryValues(regValue, regFileValue))
+                        //if (regValue != null && !RegHelper.CompareRegistryValues(regValue, regFileValue))
+                        if (regValue != regFileValue)
                         {
                             textBlock.Foreground = new SolidColorBrush(Colors.Red);
 

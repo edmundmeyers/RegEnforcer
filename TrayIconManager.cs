@@ -12,12 +12,18 @@ public class TrayIconManager
 
     public TrayIconManager()
     {
+        LoadIcons();        // Icons toggle-- load em up
         SetupTrayIcon();
 
         // Check if the application is not set to run at startup
         ShowRegFilesWindow(!IsApplicationSetToRunAtStartup());
 
         RegistryFixes = regEnforcerWindow.RegistryFixes;
+
+        // Show initial popup
+        string badRegistryValues = BadRegistryValues();
+        if (!string.IsNullOrEmpty(badRegistryValues))
+            ShowBalloonAbout(badRegistryValues);
 
         // Initialize and start the timer
         InitializeRegistryCheckTimer();
@@ -32,7 +38,8 @@ public class TrayIconManager
 
     private void CheckRegistryValues()
     {
-        string changedValues = HaveRegistryValuesChanged();
+        bool anyBad = false;
+        string changedValues = HaveRegistryValuesChanged(out anyBad);
 
         if (!string.IsNullOrEmpty(changedValues))
         {
@@ -42,27 +49,65 @@ public class TrayIconManager
                 regEnforcerWindow.LoadRegFiles();
             });
 
-            // Display a notification if there are changes
-            notifyIcon.ShowBalloonTip(
-                5000, // Duration in milliseconds
-                "Registry Changes Detected",
-                $"The following registry values have changed:\n{changedValues}",
-                ToolTipIcon.Warning
-            );
+            ShowBalloonAbout(changedValues);
         }
+
+        // Switch the tray icon to red if any are wrong
+        SetTrayIcon(anyBad);
     }
 
-    public string HaveRegistryValuesChanged()
+    private void ShowBalloonAbout(string values)
+    {
+        // Display a notification if there are changes
+        notifyIcon.ShowBalloonTip(
+            5000, // Duration in milliseconds
+            "Registry Changes Detected",
+            $"The following registry values have changed:\n{values}",
+            ToolTipIcon.Warning
+        );
+
+    }
+
+
+    private System.Drawing.Icon _blueIcon = null;
+    private System.Drawing.Icon _redIcon = null;
+    private void LoadIcons()
+    {
+        string blueIconResourceName = "RegEnforcer.Resources.Icon8.ico";
+        string redIconResourceName = "RegEnforcer.Resources.Icon8red.ico";
+
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(blueIconResourceName);
+        _blueIcon = new System.Drawing.Icon(stream);
+
+        using var stream2 = Assembly.GetExecutingAssembly().GetManifestResourceStream(redIconResourceName);
+        _redIcon = new System.Drawing.Icon(stream2);
+    }
+
+    private bool _lastAnyBad = false;
+    private void SetTrayIcon(bool anyBad)
+    {
+        if (_lastAnyBad == anyBad) return;
+
+        // Toggle
+        notifyIcon.Icon = anyBad ? _redIcon : _blueIcon;
+        _lastAnyBad = anyBad;
+    }
+
+    public string HaveRegistryValuesChanged(out bool anyBad)
     {
         string changedValues = string.Empty;
+        anyBad = false;
 
         foreach (var fixInfo in RegistryFixes)
         {
             // Get the current registry value for the key and value name
-            var currentValue = RegHelper.GetRegistryValue(fixInfo.Key, fixInfo.ValueName);
+            var currentValue = RegHelper.RegistryValueToString(RegHelper.GetRegistryValue(fixInfo.Key, fixInfo.ValueName));
 
-            // Compare the current value with the FoundValue
-            if (!AreValuesEqual(currentValue, fixInfo.FoundValue))
+            // Compare vs. what we expect-- it's not that it just changed, it's that it's not right
+            anyBad = anyBad || currentValue != fixInfo.Value;
+
+            // Compare the current value with the FoundValue to see if it changed. FoundValue is what we found last time.
+            if (currentValue != fixInfo.FoundValue)
             {
                 changedValues += $"{fixInfo.Key}\\{fixInfo.ValueName}: {currentValue} (Expected: {fixInfo.FoundValue})\n";
             }
@@ -71,26 +116,24 @@ public class TrayIconManager
         return changedValues; // No values have changed
     }
 
-
-    private bool AreValuesEqual(object currentValue, object foundValue)
+    public string BadRegistryValues()
     {
-        if (currentValue is byte[] currentBytes && foundValue is byte[] foundBytes)
-        {
-            // Compare byte arrays
-            return currentBytes.SequenceEqual(foundBytes);
-        }
-        else if (currentValue is string[] currentStrings && foundValue is string[] foundStrings)
-        {
-            // Compare string arrays
-            return currentStrings.SequenceEqual(foundStrings);
-        }
-        else
-        {
-            // Fallback to default equality check for other types
-            return Equals(currentValue, foundValue);
-        }
-    }
+        string badValues = string.Empty;
 
+        foreach (var fixInfo in RegistryFixes)
+        {
+            // Get the current registry value for the key and value name
+            var currentValue = RegHelper.RegistryValueToString(RegHelper.GetRegistryValue(fixInfo.Key, fixInfo.ValueName));
+
+            // Compare the current value with the FoundValue to see if it changed. FoundValue is what we found last time.
+            if (currentValue != fixInfo.Value)
+            {
+                badValues += $"{fixInfo.Key}\\{fixInfo.ValueName}: {currentValue} (Expected: {fixInfo.FoundValue})\n";
+            }
+        }
+
+        return badValues; // No values have changed
+    }
 
     private void SetupTrayIcon()
     {

@@ -11,12 +11,13 @@
 
   <ItemGroup>
     <None Remove="Resources\Icon8.ico" />
+    <None Remove="Resources\Icon8red.ico" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Resources\folder.png" />
     <EmbeddedResource Include="Resources\Icon8.ico" />
-    <EmbeddedResource Include="Resources\regedit.ico" />
+    <EmbeddedResource Include="Resources\Icon8red.ico" />
   </ItemGroup>
 
   <ItemGroup>
