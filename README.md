@@ -13,7 +13,8 @@ As a loyal fan of Windows Weekly (https://twit.tv/shows/windows-weekly), I have 
 ## Walkthrough
 RegEnforcer adds itself to the system tray barrowing the Registry Editor icon. When you open it, you get the main screen:
 
-![image](https://github.com/user-attachments/assets/58fbfd3a-c85b-482e-94a9-561400d21fc0)
+![RegEnforcer](https://github.com/user-attachments/assets/2f473bde-a773-448b-8082-2f8c8a42b951)
+
 
 From the File menu, select "Select Folder". RegEnforcer will load the contents of all the files into the window. If any of the registry values are not what is expected, you can click "Fix" and it will update the registry for you.
 
