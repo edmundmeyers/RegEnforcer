@@ -62,7 +62,7 @@ public class TrayIconManager
         notifyIcon.ShowBalloonTip(
             5000, // Duration in milliseconds
             "Registry Changes Detected",
-            $"The following registry values have changed:\n{values}",
+            $"{values}",
             ToolTipIcon.Warning
         );
 
@@ -109,7 +109,7 @@ public class TrayIconManager
             // Compare the current value with the FoundValue to see if it changed. FoundValue is what we found last time.
             if (currentValue != fixInfo.FoundValue)
             {
-                changedValues += $"{fixInfo.Key}\\{fixInfo.ValueName}: {currentValue} (Expected: {fixInfo.FoundValue})\n";
+                changedValues += $"{fixInfo.Key}\\{fixInfo.ValueName}: {currentValue} (Expected: {fixInfo.Value})\n";
             }
         }
 
@@ -128,7 +128,7 @@ public class TrayIconManager
             // Compare the current value with the FoundValue to see if it changed. FoundValue is what we found last time.
             if (currentValue != fixInfo.Value)
             {
-                badValues += $"{fixInfo.Key}\\{fixInfo.ValueName}: {currentValue} (Expected: {fixInfo.FoundValue})\n";
+                badValues += $"{fixInfo.Key}\\{fixInfo.ValueName}: {currentValue} (Expected: {fixInfo.Value})\n";
             }
         }
 
