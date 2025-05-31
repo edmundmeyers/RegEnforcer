@@ -22,7 +22,7 @@ public static class AppHelper
                 if (key != null)
                 {
                     var value = key.GetValue(AppName);
-                    return value != null && value.ToString() == System.Reflection.Assembly.GetExecutingAssembly().Location;
+                    return value != null && value.ToString() == GetApplicationExecutablePath();
                 }
             }
         }
@@ -45,7 +45,7 @@ public static class AppHelper
                     if (enable)
                     {
                         // Add the application to the startup list
-                        key.SetValue(AppName, System.Reflection.Assembly.GetExecutingAssembly().Location);
+                        key.SetValue(AppName, GetApplicationExecutablePath());
                     }
                     else
                     {
@@ -111,4 +111,9 @@ public static class AppHelper
         }
     }
 
+    public static string GetApplicationExecutablePath()
+    {
+        // Always return the EXE path, not a DLL
+        return System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+    }
 }

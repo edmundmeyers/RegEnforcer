@@ -158,4 +158,15 @@ public class RegistryHelper
         var hexData = hexValues.Select(hex => Convert.ToByte(hex.Trim(), 16)).ToArray();
         return Encoding.Unicode.GetString(hexData).TrimEnd('\0');
     }
+
+    public static void AddApplicationToStartup(string appName)
+    {
+        // Use the EXE path instead of the DLL path
+        string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+        using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+            @"Software\Microsoft\Windows\CurrentVersion\Run", true))
+        {
+            key.SetValue(appName, $"\"{exePath}\"");
+        }
+    }
 }
