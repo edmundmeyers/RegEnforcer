@@ -12,8 +12,6 @@ namespace RegEnforcer;
 
 public partial class RegEnforcerWindow : Window
 {
-    private static RegViewer mainWindow;
-
     private double ScreenFontSize = 11.0;
 
     public List<RegistryFixInfo> RegistryFixes { get; } = new();
@@ -300,19 +298,28 @@ public partial class RegEnforcerWindow : Window
 
     private void OpenMainWindow(string keyPath)
     {
-        if (mainWindow == null)
+        try
         {
-            mainWindow = new RegViewer();
-            mainWindow.Closed += (s, e) => mainWindow = null;
+            // Set the LastKey value for RegEdit
+            using (var regeditKey = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Applets\Regedit", true))
+            {
+                if (regeditKey != null)
+                {
+                    regeditKey.SetValue("LastKey", keyPath, RegistryValueKind.String);
+                }
+            }
 
-            // Center the MainWindow over the RegFilesWindow
-            mainWindow.Left = this.Left + (this.Width - mainWindow.Width) / 2;
-            mainWindow.Top = this.Top + (this.Height - mainWindow.Height) / 2;
-
-            mainWindow.Show();
+            // Launch RegEdit
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "regedit.exe",
+                UseShellExecute = true
+            });
         }
-
-        mainWindow.DrillToKey(keyPath);
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Failed to open RegEdit: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
 
